@@ -1,5 +1,7 @@
 # Objective: Create a ML system that detects and classifies hand-written digits.
 
+# -------------------------------------------------------------------------------------------
+
 # ! IMPORT MODULES AND PREPARE DATASET
 
 # Import sklearn modules.
@@ -36,6 +38,8 @@ print(f'y_train.shape: {y_train.shape}')    # -> (60,000,)
 print(f'X_test.shape: {X_test.shape}')    # -> (10,000, 784)
 print(f'y_test.shape: {y_test.shape}')    # -> (10,000,)
 
+# ------------------------------------------------------------------------------------------------------
+
 # ! VISUALIZE THE DATA
 
 tsne = TSNE()
@@ -46,6 +50,8 @@ scatter = plt.scatter(X_test_trans[:, 0], X_test_trans[:, 1], c=y_test[:5000])
 plt.legend(*scatter.legend_elements())
 
 # Data is formed in clusters and looks to be non-linear.
+
+# --------------------------------------------------------------------------------------------------
 
 # ! DO MORE DATA ANALYSIS
 
@@ -73,6 +79,8 @@ print(np.sum(X_train != 0)/(60000*784))    # -> 20%
 
 # Check for null values.
 print(np.isnan(np.sum(data)))    # -> False
+
+# ---------------------------------------------------------------------------------------------
 
 # ! APPLY MODEL TO THE DATA
 
@@ -102,6 +110,8 @@ svm_scores = {
 print('Train Score: {}'.format(svm_scores['train']))
 print('Test Score: {}'.format(svm_scores['test']))
 
+# -------------------------------------------------------------------------------------------------------
+
 # ! CHECK HOW SVD AFFECTED THE DATA.
 
 svd = pipe.named_steps['svd']
@@ -118,6 +128,8 @@ nonzeros_after = np.sum(data_trans != 0)/(data_trans.size)
 
 print(f'% of Zeros in Data: Before SVD: {zeros_before:.2f}, After SVD: {zeros_after}')
 print(f'% of Non Zero in Data: Before SVD: {nonzeros_before:.2f}, After SVD: {nonzeros_after}')
+
+# -------------------------------------------------------------------------------------------------------------
 
 # ! VISUALIZE THE RESULTS
 
