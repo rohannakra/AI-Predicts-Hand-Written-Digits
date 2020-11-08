@@ -61,6 +61,10 @@ target = np.concatenate((y_train[:6000], y_test[:1000]))
 
 print(data.shape)    # -> (7000, 784)
 print(target.shape)    # -> (7000,)
+print(data.size)    # -> 5,488,000
+
+# NOTE: The amount of features (784) is not ideal because it will
+#       take lots of computational power.
 
 print(data[0].shape)    # -> (784,)
 
