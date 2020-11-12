@@ -9,7 +9,9 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.model_selection import cross_validate, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
+from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
+from sklearn.datasets import load_digits
 
 # Import other modules.
 import matplotlib.pyplot as plt
@@ -17,11 +19,15 @@ import pandas as pd
 import numpy as np
 import os
 
+# Getting workspace/project to create a path that leads to the dataset.
 print(os.getcwd())
 
 # Import dataset.
-train = pd.read_csv('train.csv')
-test = pd.read_csv('test.csv')
+train_path = os.path.join('Projects/AI Predicts Hand-Written Digits', 'train.csv')
+test_path = os.path.join('Projects/AI Predicts Hand-Written Digits', 'test.csv')
+
+train = pd.read_csv(train_path)
+test = pd.read_csv(test_path)
 
 # NOTE: You can download these files @: https://www.kaggle.com/oddrationale/mnist-in-csv?select=mnist_train.csv
 
@@ -48,8 +54,9 @@ X_test_trans = tsne.fit_transform(X_test[:5000])
 
 scatter = plt.scatter(X_test_trans[:, 0], X_test_trans[:, 1], c=y_test[:5000])
 plt.legend(*scatter.legend_elements())
+plt.show()
 
-# Data is formed in clusters and looks to be non-linear.
+# Data is formed in clusters and looks to be linearly seperable.
 
 # --------------------------------------------------------------------------------------------------
 
@@ -73,6 +80,7 @@ sample = data[0].reshape((28, 28))
 
 plt.imshow(sample, cmap='binary')
 plt.text(25, 25, target[0], fontsize=20, color='red')
+plt.show()
 
 # Checking one more time if the concatenation was correct:
 print(target[6000] == y_test[0])    # -> True
@@ -84,17 +92,31 @@ print(np.sum(X_train != 0)/(60000*784))    # -> 20%
 # Check for null values.
 print(np.isnan(np.sum(data)))    # -> False
 
+# --------------------------------------------------------------------
+
+# ! APPLY LINEAR MODEL TO THE DATA (double checking if data is linear)
+
+# Use SVD for decomposition with pipeline.
+pipe_lin = Pipeline([
+    ('svd', TruncatedSVD(n_components=149)),
+    ('lin_svm', Perceptron())    # Preceptron models only work if data is linear.
+])
+
+# NOTE: SVDs are good for dimensionality reduction when data has a lot of zeros.
+
+pipe_lin.fit(X_train, y_train)
+
+print(pipe_lin.score(X_train, y_train))
+print(pipe_lin.score(X_test, y_test))
+
 # ---------------------------------------------------------------------------------------------
 
 # ! APPLY MODEL TO THE DATA
 
-# Use SVD for decomposition with pipeline.
 pipe = Pipeline([
     ('svd', TruncatedSVD(n_components=149)),
     ('svm', SVC())
 ])
-
-# NOTE: SVDs are good for dimensionality reduction when data has a lot of zeros.
 
 cross_validate_args = {
     'cv': 5,
@@ -124,11 +146,11 @@ data_trans = svd.fit_transform(data)
 
 print(data_trans.shape)    # -> (60000, 149)
 
-zeros_before = np.sum(data == 0)/(data.size)
-zeros_after = np.sum(data_trans == 0)/(data_trans.size)
+zeros_before = np.sum(data == 0)/data.size
+zeros_after = np.sum(data_trans == 0)/data_trans.size
 
-nonzeros_before = np.sum(data != 0)/(data.size)
-nonzeros_after = np.sum(data_trans != 0)/(data_trans.size)
+nonzeros_before = np.sum(data != 0)/data.size
+nonzeros_after = np.sum(data_trans != 0)/data_trans.size
 
 print(f'% of Zeros in Data: Before SVD: {zeros_before:.2f}, After SVD: {zeros_after}')
 print(f'% of Non Zero in Data: Before SVD: {nonzeros_before:.2f}, After SVD: {nonzeros_after}')
@@ -138,13 +160,11 @@ print(f'% of Non Zero in Data: Before SVD: {nonzeros_before:.2f}, After SVD: {no
 # ! VISUALIZE THE RESULTS
 
 # Checking how digits dataset displays images.
-from sklearn.datasets import load_digits
-
 dig_data = load_digits().data
 dig_img = load_digits().images
 
-print(images.shape)
-print(data.shape)
+print(dig_data.shape)
+print(dig_img.shape)
 
 # NOTE: Found out that images variable is 3 dimensional!
 
