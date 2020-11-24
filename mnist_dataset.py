@@ -8,13 +8,13 @@
 from sklearn.decomposition import TruncatedSVD
 from sklearn.model_selection import cross_validate, cross_val_predict
 from sklearn.pipeline import Pipeline
-from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
 from sklearn.datasets import load_digits
+from sklearn.preprocessing import StandardScaler
 import pygame
 from tkinter import *
-import tensorflow as tf
 
 # Import other modules.
 import matplotlib.pyplot as plt
@@ -66,8 +66,8 @@ plt.show()
 # ! DO MORE DATA ANALYSIS
 
 # Shorten amount of samples.
-data = np.concatenate((X_train[:6000], X_test[:1000]))
-target = np.concatenate((y_train[:6000], y_test[:1000]))
+data = np.concatenate((X_train := X_train[:30000], X_test := X_test[:5000]))
+target = np.concatenate((y_train := y_train[:30000], y_test := y_test[:5000]))
 
 print(data.shape)    # -> (7000, 784)
 print(target.shape)    # -> (7000,)
@@ -116,34 +116,27 @@ print(pipe_lin.score(X_test, y_test))
 
 # ! APPLY MODEL TO THE DATA
 
-pipe = Pipeline([
+mlp = Pipeline([
     ('svd', TruncatedSVD(n_components=149)),
-    ('svm', SVC())
+    ('scaler', StandardScaler()),
+    ('mlp', MLPClassifier(
+        verbose=True,
+        random_state=42,
+        hidden_layer_sizes=(200,),
+        alpha=0.1,
+    ))
 ])
 
-cross_validate_args = {
-    'cv': 5,
-    'n_jobs': -1,
-    'verbose': 100,
-    'return_train_score': True,
-    'return_estimator': True
-}
+mlp.fit(X_train, y_train)
 
-svm = cross_validate(pipe, data, target, **cross_validate_args)
-
-svm_scores = {
-    'train': np.average(svm['train_score']),
-    'test': np.average(svm['test_score'])
-}
-
-print('Train Score: {}'.format(svm_scores['train']))
-print('Test Score: {}'.format(svm_scores['test']))
+print(mlp.score(X_train, y_train))
+print(mlp.score(X_test, y_test))
 
 # -------------------------------------------------------------------------------------------------------
 
 # ! CHECK HOW SVD AFFECTED THE DATA.
 
-svd = pipe.named_steps['svd']
+svd = mlp.named_steps['svd']
 
 data_trans = svd.fit_transform(data)
 
@@ -183,23 +176,23 @@ returns a np array with a column of 784 data points.
 
 '''
 
-cross_validate_args_pred = {
-    'cv': 5,
-    'n_jobs': -1,
-    'verbose': 100,
-}
-
 fig, axs = plt.subplots(3, 3, subplot_kw={'yticks': (), 'xticks': ()}, figsize=(12.5, 12.5))
 
-predictions = cross_val_predict(pipe, X_train, y_train, **cross_validate_args_pred)[:9]
+predictions = mlp.predict(X_test[9:18])
 axs = [ax for ax in axs.ravel()]
-data_imgs = data[:9].reshape(9, 28, 28)
+data_imgs = X_test[9:18].reshape(9, 28, 28)
 
 for ax, prediction, img in zip(axs, predictions, data_imgs):
     ax.imshow(img, cmap='binary')
     ax.text(23, 25, prediction, fontsize=11, color='red')
 
 plt.show()
+
+# ---------------------------------------------------------------------------------------------------------------------
+
+# ! MAKE YOUR OWN SAMPLES
+
+model = mlp.named_steps['mlp'].fit(X_train, y_train)
 
 # Create user plot mechanism using pygame.
 class Pixel(object):
@@ -243,6 +236,7 @@ class Pixel(object):
         if j < rows - 1 and i < cols - 1:  # Bottom Right
             self.neighbors.append(g.pixels[i + 1][j + 1])
 
+
 class Grid(object):
     pixels = []
 
@@ -252,7 +246,7 @@ class Grid(object):
         self.len = row * col
         self.width = width
         self.height = height
-        self.generatePixels()
+        self.generate_pixels()
         pass
 
     def draw(self, surface):
@@ -267,11 +261,11 @@ class Grid(object):
         for r in range(self.rows):
             self.pixels.append([])
             for c in range(self.cols):
-                self.pixels[r].append(pixel(x_gap * c, y_gap * r, x_gap, y_gap))
+                self.pixels[r].append(Pixel(x_gap * c, y_gap * r, x_gap, y_gap))
 
         for r in range(self.rows):
             for c in range(self.cols):
-                self.pixels[r][c].getNeighbors(self)
+                self.pixels[r][c].get_neighbor(self)
 
     def clicked(self, pos):    # Return the position in the grid that user clicked on
         try:
@@ -292,31 +286,20 @@ class Grid(object):
 
         for i in range(len(li)):
             for j in range(len(li[i])):
-                if li[i][j].color == (255,255,255):
+                if li[i][j].color == (255, 255, 255):
                     newMatrix[i].append(0)
                 else:
-                    newMatrix[i].append(1)
-        # TODO: Fix this for model.
-        mnist = tf.keras.datasets.mnist
-        (x_train, y_train), (x_test, y_test) = mnist.load_data()
-        x_test = tf.keras.utils.normalize(x_test, axis=1)
-        for row in range(28):
-            for x in range(28):
-                x_test[0][row][x] = newMatrix[row][x]
+                    newMatrix[i].append(175)
 
-        return x_test[:1]
+        return np.array(newMatrix).reshape(1, -1)
 
 
 def guess(li):
-    model = tf.keras.models.load_model('m.model')
-
-    predictions = model.predict(li)
-    print(predictions[0])
-    t = (np.argmax(predictions[0]))
-    print("I predict this number is a:", t)
+    prediction = model.predict(li)[0]
+    print("I predict this number is a:", prediction)
+    print('Shape of sample: ', li.shape)
     window = Tk()
     window.withdraw()
-    messagebox.showinfo("Prediction", "I predict this number is a: " + str(t))
     window.destroy()
     #plt.imshow(li[0], cmap=plt.cm.binary)
     #plt.show()
@@ -332,20 +315,20 @@ def main():
             if event.type == pygame.KEYDOWN:
                 li = g.convert_binary()
                 guess(li)
-                g.generatePixels()
+                g.generate_pixels()
             if pygame.mouse.get_pressed()[0]:
 
                 pos = pygame.mouse.get_pos()
                 clicked = g.clicked(pos)
-                clicked.color = (0,0,0)
+                clicked.color = (0, 0, 0)
                 for n in clicked.neighbors:
-                    n.color = (0,0,0)
+                    n.color = (0, 0, 0)
 
             if pygame.mouse.get_pressed()[2]:
                 try:
                     pos = pygame.mouse.get_pos()
                     clicked = g.clicked(pos)
-                    clicked.color = (255,255,255)
+                    clicked.color = (255, 255, 255)
                 except:
                     pass
 
@@ -356,7 +339,7 @@ pygame.init()
 width = height = 560
 win = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Number Guesser")
-g = grid(28, 28, width, height)
+g = Grid(28, 28, width, height)
 main()
 
 
