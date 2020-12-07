@@ -5,22 +5,19 @@
 # ! IMPORT MODULES AND PREPARE DATASET
 
 # Import sklearn modules.
-from sklearn.decomposition import TruncatedSVD
-from sklearn.model_selection import cross_validate, cross_val_predict
-from sklearn.pipeline import Pipeline
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
 from sklearn.datasets import load_digits
 from sklearn.preprocessing import StandardScaler
-import pygame
-from tkinter import *
 
 # Import other modules.
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
+import pygame
+from tkinter import *
 
 # Getting workspace/project to create a path that leads to the dataset.
 print(os.getcwd())
@@ -65,16 +62,10 @@ plt.show()
 
 # ! DO MORE DATA ANALYSIS
 
-# Shorten amount of samples.
-data = np.concatenate((X_train := X_train[:30000], X_test := X_test[:5000]))
-target = np.concatenate((y_train := y_train[:30000], y_test := y_test[:5000]))
+data = np.concatenate((X_train, X_test))
+target = np.concatenate((y_train, y_test))
 
-print(data.shape)    # -> (7000, 784)
-print(target.shape)    # -> (7000,)
-print(data.size)    # -> 5,488,000
-
-# NOTE: The amount of features (784) is not ideal because it will
-#       take lots of computational power.
+# NOTE: The amount of features (784) will take lots of computational power.
 
 print(data[0].shape)    # -> (784,)
 
@@ -85,71 +76,78 @@ plt.imshow(sample, cmap='binary')
 plt.text(25, 25, target[0], fontsize=20, color='red')
 plt.show()
 
-# Checking one more time if the concatenation was correct:
-print(target[6000] == y_test[0])    # -> True
-
 # Check % of data that's 0.
-print(np.sum(X_train == 0)/(60000*784))    # -> 80%
-print(np.sum(X_train != 0)/(60000*784))    # -> 20%
+print(np.sum(X_train == 0)/X_train.size)    # -> 80%
+print(np.sum(X_train != 0)/X_train.size)    # -> 20%
 
 # Check for null values.
 print(np.isnan(np.sum(data)))    # -> False
+
+# Change the data so that every value is the same (0 or ___).
+all_values = []
+
+for sub_arr in data:
+    for i in sub_arr:
+        if i != 0:
+            all_values.append(i)
+
+print(average_val := sum(all_values)/len(all_values))    # -> 174.4
+
+# Create scaler.
+scaler = StandardScaler()
+
+
+# Reform the data according to value.
+def reform_data(arr, scale=None):
+    new_arr = []
+    for sub_arr in arr:
+        new_arr.append([])
+        index = new_arr.index([])    # Finds index of new row/sample.
+        for i in sub_arr:
+            if i != 0:
+                new_arr[index].append(average_val)
+            else:
+                new_arr[index].append(0)
+
+    return np.array(new_arr) if scale is None else scale(np.array(new_arr))
+
+
+# Reform the data.
+X_train = reform_data(X_train, scaler.fit_transform)
+X_test = reform_data(X_test, scaler.transform)
+
+print(f'X_train.shape: {X_train.shape}')    # -> (60000, 149)
+print(f'X_test.shape: {X_test.shape}')    # -> (10000, 149)
+
+#print(transform(data[0]).shape)    # -> (1, 149)
 
 # --------------------------------------------------------------------
 
 # ! APPLY LINEAR MODEL TO THE DATA (double checking if data is linear)
 
-# Use SVD for decomposition with pipeline.
-pipe_lin = Pipeline([
-    ('svd', TruncatedSVD(n_components=149)),
-    ('lin_svm', Perceptron())    # Preceptron models only work if data is linear.
-])
+lin_clf = Perceptron()    # Perceptron only works when data is linear.
 
 # NOTE: SVDs are good for dimensionality reduction when data has a lot of zeros.
 
-pipe_lin.fit(X_train, y_train)
+lin_clf.fit(X_train, y_train)
 
-print(pipe_lin.score(X_train, y_train))
-print(pipe_lin.score(X_test, y_test))
+print(lin_clf.score(X_train, y_train))
+print(lin_clf.score(X_test, y_test))
 
 # ---------------------------------------------------------------------------------------------
 
 # ! APPLY MODEL TO THE DATA
+mlp_clf = MLPClassifier(    # MLP stands for multi-layer perceptron.
+    verbose=True,
+    random_state=42,
+    hidden_layer_sizes=(200,),
+    alpha=0.1
+)
 
-mlp = Pipeline([
-    ('svd', TruncatedSVD(n_components=149)),
-    ('scaler', StandardScaler()),
-    ('mlp', MLPClassifier(
-        verbose=True,
-        random_state=42,
-        hidden_layer_sizes=(200,),
-        alpha=0.1,
-    ))
-])
+mlp_clf.fit(X_train, y_train)
 
-mlp.fit(X_train, y_train)
-
-print(mlp.score(X_train, y_train))
-print(mlp.score(X_test, y_test))
-
-# -------------------------------------------------------------------------------------------------------
-
-# ! CHECK HOW SVD AFFECTED THE DATA.
-
-svd = mlp.named_steps['svd']
-
-data_trans = svd.fit_transform(data)
-
-print(data_trans.shape)    # -> (60000, 149)
-
-zeros_before = np.sum(data == 0)/data.size
-zeros_after = np.sum(data_trans == 0)/data_trans.size
-
-nonzeros_before = np.sum(data != 0)/data.size
-nonzeros_after = np.sum(data_trans != 0)/data_trans.size
-
-print(f'% of Zeros in Data: Before SVD: {zeros_before:.2f}, After SVD: {zeros_after}')
-print(f'% of Non Zero in Data: Before SVD: {nonzeros_before:.2f}, After SVD: {nonzeros_after}')
+print(mlp_clf.score(X_train, y_train))
+print(mlp_clf.score(X_test, y_test))
 
 # -------------------------------------------------------------------------------------------------------------
 
@@ -178,9 +176,9 @@ returns a np array with a column of 784 data points.
 
 fig, axs = plt.subplots(3, 3, subplot_kw={'yticks': (), 'xticks': ()}, figsize=(12.5, 12.5))
 
-predictions = mlp.predict(X_test[9:18])
+predictions = mlp_clf.predict(X_train[:9])
 axs = [ax for ax in axs.ravel()]
-data_imgs = X_test[9:18].reshape(9, 28, 28)
+data_imgs = data[:9].reshape(9, 28, 28)
 
 for ax, prediction, img in zip(axs, predictions, data_imgs):
     ax.imshow(img, cmap='binary')
@@ -192,14 +190,15 @@ plt.show()
 
 # ! MAKE YOUR OWN SAMPLES
 
-model = mlp.named_steps['mlp'].fit(X_train, y_train)
 
 # Create user plot mechanism using pygame.
+
 class Pixel(object):
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
-        self.width = width
+        self.width1 = width
+        self.width = self.width1
         self.height = height
         self.color = (255, 255, 255)
         self.neighbors = []
@@ -282,27 +281,23 @@ class Grid(object):
     def convert_binary(self):
         li = self.pixels
 
-        newMatrix = [[] for x in range(len(li))]
+        new_matrix = [[] for x in range(len(li))]
 
         for i in range(len(li)):
             for j in range(len(li[i])):
                 if li[i][j].color == (255, 255, 255):
-                    newMatrix[i].append(0)
+                    new_matrix[i].append(0)
                 else:
-                    newMatrix[i].append(175)
+                    new_matrix[i].append(average_val)
 
-        return np.array(newMatrix).reshape(1, -1)
+        return reform_data(np.array(new_matrix).reshape(1, -1), scaler.transform)
 
 
 def guess(li):
-    prediction = model.predict(li)[0]
-    print("I predict this number is a:", prediction)
-    print('Shape of sample: ', li.shape)
+    print("I predict this number is a:", mlp_clf.predict(li)[0])
     window = Tk()
     window.withdraw()
     window.destroy()
-    #plt.imshow(li[0], cmap=plt.cm.binary)
-    #plt.show()
 
 
 def main():
@@ -334,6 +329,7 @@ def main():
 
         g.draw(win)
         pygame.display.update()
+
 
 pygame.init()
 width = height = 560
