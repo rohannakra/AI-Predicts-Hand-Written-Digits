@@ -18,6 +18,10 @@ import numpy as np
 import os
 import pygame
 from tkinter import *
+from time import time
+from plyer import notification
+
+# NOTE: To import 'plyer' module, you must use 'pip install plyer'
 
 # Getting workspace/project to create a path that leads to the dataset.
 print(os.getcwd())
@@ -141,13 +145,27 @@ mlp_clf = MLPClassifier(    # MLP stands for multi-layer perceptron.
     verbose=True,
     random_state=42,
     hidden_layer_sizes=(200,),
-    alpha=0.1
+    alpha=1
 )
+
+start_time = time()
 
 mlp_clf.fit(X_train, y_train)
 
-print(mlp_clf.score(X_train, y_train))
-print(mlp_clf.score(X_test, y_test))
+end_time = (time() - start_time)/60
+
+print('MLP Train Score: {}'.format(train_score := mlp_clf.score(X_train, y_train)))
+print('MLP Test Score: {}'.format(test_score := mlp_clf.score(X_test, y_test)))
+
+# Notify when done.
+notification.notify(
+    title='Neural Network Training Results',
+    message=f'Elapsed: {end_time:.2f} min.'
+            f'\nTrain Score: {train_score*100:.2f}'
+            f'\nTest Score: {test_score*100:.2f}',
+    timeout=50,
+    app_icon=os.path.join('Projects/AI Predicts Hand-Written Digits', 'python_icon.ico')
+)
 
 # -------------------------------------------------------------------------------------------------------------
 
