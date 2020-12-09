@@ -120,10 +120,8 @@ def reform_data(arr, scale=None):
 X_train = reform_data(X_train, scaler.fit_transform)
 X_test = reform_data(X_test, scaler.transform)
 
-print(f'X_train.shape: {X_train.shape}')    # -> (60000, 149)
-print(f'X_test.shape: {X_test.shape}')    # -> (10000, 149)
-
-#print(transform(data[0]).shape)    # -> (1, 149)
+print(f'X_train.shape: {X_train.shape}')    # -> (60000, 784)
+print(f'X_test.shape: {X_test.shape}')    # -> (10000, 784)
 
 # --------------------------------------------------------------------
 
@@ -247,7 +245,7 @@ class Pixel(object):
         if j + 1 < rows and i > -1 and i - 1 > 0:  # Bottom Left
             self.neighbors.append(g.pixels[i - 1][j + 1])
 
-        if j - 1 < rows and i < cols - 1 and j - 1 > 0:  # Top Right
+        if rows > j - 1 > 0 and i < cols - 1:  # Top Right
             self.neighbors.append(g.pixels[i + 1][j - 1])
 
         if j < rows - 1 and i < cols - 1:  # Bottom Right
