@@ -73,13 +73,6 @@ target = np.concatenate((y_train, y_test))
 
 print(data[0].shape)    # -> (784,)
 
-# Check how plt.imshow() works with data.
-sample = data[0].reshape((28, 28))
-
-plt.imshow(sample, cmap='binary')
-plt.text(25, 25, target[0], fontsize=20, color='red')
-plt.show()
-
 # Check % of data that's 0.
 print(np.sum(X_train == 0)/X_train.size)    # -> 80%
 print(np.sum(X_train != 0)/X_train.size)    # -> 20%
@@ -123,9 +116,21 @@ X_test = reform_data(X_test, scaler.transform)
 print(f'X_train.shape: {X_train.shape}')    # -> (60000, 784)
 print(f'X_test.shape: {X_test.shape}')    # -> (10000, 784)
 
+# Check how X_train sample is now different.
+fig, (ax1, ax2) = plt.subplots(1, 2)
+
+ax1.imshow(data[0].reshape((28, 28)), cmap='binary')
+ax1.text(25, 25, target[0], fontsize=20, color='red')
+ax1.set_title('Before reform_data()')
+
+ax2.imshow(X_train[0].reshape((28, 28)))
+ax2.text(25, 25, target[0], fontsize=20, color='red')
+ax2.set_title('After reform_data()')
+
+
 # --------------------------------------------------------------------
 
-# ! APPLY LINEAR MODEL TO THE DATA (double checking if data is linear)
+# ! APPLY LINEAR MODEL TO THE DATA
 
 lin_clf = Perceptron()    # Perceptron only works when data is linear.
 
@@ -194,7 +199,7 @@ fig, axs = plt.subplots(3, 3, subplot_kw={'yticks': (), 'xticks': ()}, figsize=(
 
 predictions = mlp_clf.predict(X_train[:9])
 axs = [ax for ax in axs.ravel()]
-data_imgs = data[:9].reshape(9, 28, 28)
+data_imgs = X_train[:9].reshape(9, 28, 28)
 
 for ax, prediction, img in zip(axs, predictions, data_imgs):
     ax.imshow(img, cmap='binary')
@@ -208,7 +213,6 @@ plt.show()
 
 
 # Create user plot mechanism using pygame.
-
 class Pixel(object):
     def __init__(self, x, y, width, height):
         self.x = x
