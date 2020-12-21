@@ -143,12 +143,18 @@ ax2.set_title('After reform_data()')
 # %%
 lin_clf = Perceptron()    # Perceptron only works when data is linear.
 
-# NOTE: SVDs are good for dimensionality reduction when data has a lot of zeros.
+# NOTE: Perceptron is a neural network with only one hidden-layer.
 
-lin_clf.fit(X_train.reshape(60000, 784), y_train)
+# Reform the data for Perceptron().
+reform_sklearn = lambda target : np.array([np.argmax(sample) for sample in target])
 
-print(f'Perceptron train score: {lin_clf.score(X_train.reshape(60000, 784), y_train)}')
-print(f'Perceptron test score: {lin_clf.score(X_test.reshape(10000, 784), y_test)}')
+sklearn_X_trian, sklearn_X_test = (X_train.reshape(60000, 784), X_test.reshape(10000, 784))
+sklearn_y_train, sklearn_y_test = (reform_sklearn(y_train), reform_sklearn(y_test))
+
+lin_clf.fit(sklearn_X_trian, sklearn_y_train)
+
+print(f'Perceptron train score: {lin_clf.score(sklearn_X_trian, sklearn_y_train)}')
+print(f'Perceptron test score: {lin_clf.score(sklearn_X_test, sklearn_y_test)}')
 
 # %% [markdown]
 # #### Apply Model to the Data
@@ -187,7 +193,7 @@ print(elapsed := f'Elapsed: {end_time:.2f} min.')
 # Notify when done.
 notification.notify(
     title='Neural Network Training Results',
-    message=f'{elapsed}\n{train_score}\n{test_score}',
+    message=f'{train_score}\n{test_score}\n{elapsed}',
     app_icon='python_icon.ico'
 )
 
