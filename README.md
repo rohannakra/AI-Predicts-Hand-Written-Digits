@@ -1,8 +1,8 @@
-# AI-Predicts-Hand-Written-Digits
+# AI Predicts Hand Written Digits
 
 Steps Taken:
 * data analysis
-    * create a consistent value for each data point.
+    * create a consistent value for each data point
     * scale the data using ```StandardScaler()```
 * create deep learning model
     * create convultional neural network
