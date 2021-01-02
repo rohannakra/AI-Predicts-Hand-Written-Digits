@@ -1,5 +1,8 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
+# %%
+from IPython import get_ipython
+
 # %% [markdown]
 # ## Objective - Create a ML system that detects and classifies hand-written digits
 # %% [markdown]
@@ -17,6 +20,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.utils import to_categorical
+get_ipython().run_line_magic('matplotlib', 'inline')
 
 # Import other modules.
 import matplotlib.pyplot as plt
@@ -71,7 +75,7 @@ plt.show()
 # Data is formed in clusters and looks to be linearly seperable.
 
 # %% [markdown]
-# #### Data Analysis
+# #### Data analysis
 
 # %%
 data = np.concatenate((X_train, X_test))
@@ -138,7 +142,7 @@ ax2.text(25, 25, np.where(y_train[0] == 1)[0][0], fontsize=20, color='red')
 ax2.set_title('After reform_data()')
 
 # %% [markdown]
-# #### Apply Linear Model to the Data
+# #### Apply linear model to the data
 
 # %%
 lin_clf = Perceptron()    # Perceptron only works when data is linear.
@@ -157,7 +161,7 @@ print(f'Perceptron train score: {lin_clf.score(sklearn_X_trian, sklearn_y_train)
 print(f'Perceptron test score: {lin_clf.score(sklearn_X_test, sklearn_y_test)}')
 
 # %% [markdown]
-# #### Apply Model to the Data
+# #### Apply model to the data
 
 # %%
 def model():
@@ -198,22 +202,22 @@ notification.notify(
 )
 
 # %% [markdown]
-# #### Test the Model
+# #### Test the model through visualizations
 
 # %%
 # Create a list of predictions.
-samples = np.array([choice(X_test).reshape(1, 28, 28, 1) for i in range(9)])
-predictions = [np.argmax(CNN.predict(sample)) for sample in samples]
+sample = np.array(choice(X_test).reshape(1, 28, 28, 1))
+prediction = np.argmax(CNN.predict(sample))
 
-fig, axs = plt.subplots(3, 3, subplot_kw={'yticks': (), 'xticks': ()}, figsize=(12.5, 12.5))
+sample_img = sample.reshape(28, 28)
 
-axs = [ax for ax in axs.ravel()]
-data_imgs = samples.reshape(9, 28, 28)
-
-for ax, prediction, img in zip(axs, predictions, data_imgs):
-    ax.imshow(img, cmap='binary')
-    ax.text(23, 25, prediction, fontsize=11, color='red')
-
-plt.show()
+plt.imshow(sample_img, cmap='binary')
+plt.text(23, 25, prediction, fontsize=11, color='red')
+plt.tick_params(
+    axis='both',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False)
 
 
