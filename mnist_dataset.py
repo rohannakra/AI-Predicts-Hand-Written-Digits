@@ -15,7 +15,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
 from sklearn.datasets import load_digits
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.keras.optimizers import SGD
@@ -99,7 +99,7 @@ for sub_arr in data:
 print(average_val := sum(all_values)/len(all_values))    # -> 174.4
 
 # Create scaler.
-scaler = StandardScaler()
+scaler = MinMaxScaler()
 
 # Reform the data according to value.
 def reform_data(arr, scale=None):
