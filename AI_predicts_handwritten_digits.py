@@ -179,11 +179,18 @@ def model():
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
+# NOTE: Sequential() models allow you to make models layer-by-layer and is much simpler compared to Input() models.
+#       Conv2D() is an input layer for converting an image in to a matrix.
+#       MaxPooling2D() is another input layer.
+#       Flatten() converts multi-dimensional data into a single vector to be processed. Ex: 28 x 28 -> 784
+#       Dense() is an output layer.
+#       SGD() is stochastic gradient descent where it is used to update the weights.
+
 # Create timer.
 start_time = time()
 
 CNN = model()
-CNN.fit(X_train, y_train, epochs=10, batch_size=32)
+CNN.fit(X_train, y_train, epochs=10, batch_size=32, verbose=2)
 
 end_time = (time() - start_time)/60
 
