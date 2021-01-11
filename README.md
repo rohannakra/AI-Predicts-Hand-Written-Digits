@@ -2,12 +2,14 @@
 
 Steps Taken:
 * data analysis
-    * create a consistent value for each data point
-    * scale the data using
+    * create consistent value for each data point
+    * scale data
 * create deep learning model
     * create convultional neural network
-        * train the model on the dataset
-* view the results
-    * plot the results using matplotlib
+        * train model on dataset
+* view results
+    * plot results using matplotlib
+* create camera interface
+    * <mark>NOTE:</mark> most efficient way to use interface is sharpie & blank paper
 
 <img src='img.png'>

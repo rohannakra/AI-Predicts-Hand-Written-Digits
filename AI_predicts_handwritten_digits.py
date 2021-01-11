@@ -9,8 +9,9 @@ from IPython import get_ipython
 # #### Import modules and prepare dataset
 
 # %%
-# Import sklearn/tensorflow modules.
+# Import sklearn/tensorflow/keras modules.
 import tensorflow as tf
+import keras.backend.tensorflow_backend as tfback
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
@@ -35,6 +36,8 @@ from plyer import notification
 from scipy.ndimage.interpolation import shift
 from skimage.transform import rescale
 from random import choice
+import cv2
+from IPython.display import clear_output
 
 # NOTE: To import 'plyer' module, you must use 'pip install plyer'
 
@@ -82,11 +85,11 @@ data = np.concatenate((X_train, X_test))
 target = np.concatenate((y_train, y_test))
 
 # Check % of data that's 0.
-print(np.sum(data == 0)/data.size)    # -> 80%
-print(np.sum(data != 0)/data.size)    # -> 20%
+percent_of_zeros = np.sum(data == 0)/data.size    # -> 80%
+percent_of_non_zeros = np.sum(data != 0)/data.size    # -> 20%
 
 # Check for null values.
-print(np.isnan(np.sum(data)))    # -> False
+check_null = np.isnan(np.sum(data))    # -> False
 
 # Change the data so that every value is the same (0 or ___).
 all_values = []
@@ -96,7 +99,7 @@ for sub_arr in data:
         if i != 0:
             all_values.append(i)
 
-print(average_val := sum(all_values)/len(all_values))    # -> 174.4
+average_val = sum(all_values)/len(all_values)    # -> 174.4
 
 # Create scaler.
 scaler = MinMaxScaler()
@@ -145,20 +148,21 @@ ax2.set_title('After reform_data()')
 # #### Apply linear model to the data
 
 # %%
-lin_clf = Perceptron()    # Perceptron only works when data is linear.
+perceptron = Perceptron(max_iter=99999999)    # Perceptron only works when data is linear.
 
 # NOTE: Perceptron is a neural network with only one hidden-layer.
 
 # Reform the data for Perceptron().
 reform_sklearn = lambda target : np.array([np.argmax(sample) for sample in target])
 
-sklearn_X_trian, sklearn_X_test = (X_train.reshape(60000, 784), X_test.reshape(10000, 784))
-sklearn_y_train, sklearn_y_test = (reform_sklearn(y_train), reform_sklearn(y_test))
+perceptron_X_trian, perceptron_X_test = (X_train.reshape(60000, 784), X_test.reshape(10000, 784))
+perceptron_y_train, perceptron_y_test = (reform_sklearn(y_train), reform_sklearn(y_test))
 
-lin_clf.fit(sklearn_X_trian, sklearn_y_train)
+perceptron.fit(sklearn_X_trian, sklearn_y_train)
 
-print(f'Perceptron train score: {lin_clf.score(sklearn_X_trian, sklearn_y_train)}')
-print(f'Perceptron test score: {lin_clf.score(sklearn_X_test, sklearn_y_test)}')
+print(f'Perceptron train score: {perceptron.score(perceptron_X_trian, perceptron_y_train)}')
+print(f'Perceptron test score: {perceptron.score(perceptron_X_test, perceptron_y_test)}')
+print(f'Number of iterations used: {perceptron.n_iter_}')
 
 # %% [markdown]
 # #### Apply model to the data
@@ -190,7 +194,10 @@ def model():
 start_time = time()
 
 CNN = model()
-CNN.fit(X_train, y_train, epochs=10, batch_size=32, verbose=2)
+CNN.fit(X_train, y_train, epochs=10, batch_size=32)
+
+# Clear the output.
+clear_output()
 
 end_time = (time() - start_time)/60
 
@@ -219,12 +226,70 @@ prediction = np.argmax(CNN.predict(sample))
 sample_img = sample.reshape(28, 28)
 
 plt.imshow(sample_img, cmap='binary')
-plt.text(23, 25, prediction, fontsize=11, color='red')
+plt.text(18, 26, f'Prediction: {prediction}', fontsize=11, color='red')
 plt.tick_params(
     axis='both',          # changes apply to the x-axis
     which='both',      # both major and minor ticks are affected
     bottom=False,      # ticks along the bottom edge are off
     top=False,         # ticks along the top edge are off
     labelbottom=False)
+
+# %% [markdown]
+# #### Create camera interface
+
+# %%
+def _get_available_gpus():
+    devices = tf.config.list_logical_devices
+    device_names = [device.name for device in devices]
+    return [device for device in device_names if 'device:gpu' in device.lower()]
+
+def get_img_contour_thresh(img):
+    x, y, w, h = 0, 0, 300, 300
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (35, 35), 0)
+    ret, thresh1 = cv2.threshold(blur, 70, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    thresh1 = thresh1[y:y + h, x:x + w]
+    contours, hierarchy = cv2.findContours(thresh1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
+    return img, contours, thresh1
+
+def main():
+
+    cap = cv2.VideoCapture(0)
+    while (cap.isOpened()):
+        ret, img = cap.read()
+        img, contours, thresh = get_img_contour_thresh(img)
+        ans1 = ''
+
+        if len(contours) > 0:
+            contour = max(contours, key=cv2.contourArea)
+            if cv2.contourArea(contour) > 2500:
+                x, y, w, h = cv2.boundingRect(contour)
+                newImage = thresh[y:y + h, x:x + w]
+                newImage = cv2.resize(newImage, (28, 28))
+                newImage = np.array(newImage)
+                newImage = newImage.flatten()
+                newImage = newImage.reshape(1, 28, 28, 1)
+                ans1 = CNN.predict(newImage)
+                ans1=ans1.tolist()
+                ans1 = ans1[0].index(max(ans1[0]))
+
+        x, y, w, h = 0, 0, 300, 300
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        cv2.putText(img, " Prediction : " + str(ans1), (10, 330),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        #change the window size to fit screen properly
+        #img = cv2.resize(img, (1000, 600))
+        cv2.imshow("Frame", img)
+        cv2.imshow("Contours", thresh)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+# tfback._get_available_gpus = _get_available_gpus
+main()
 
 
