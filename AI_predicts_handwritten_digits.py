@@ -9,9 +9,8 @@ from IPython import get_ipython
 # #### Import modules and prepare dataset
 
 # %%
-# Import sklearn/tensorflow/keras modules.
+# Import sklearn/tensorflow modules.
 import tensorflow as tf
-import keras.backend.tensorflow_backend as tfback
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
@@ -158,7 +157,7 @@ reform_sklearn = lambda target : np.array([np.argmax(sample) for sample in targe
 perceptron_X_trian, perceptron_X_test = (X_train.reshape(60000, 784), X_test.reshape(10000, 784))
 perceptron_y_train, perceptron_y_test = (reform_sklearn(y_train), reform_sklearn(y_test))
 
-perceptron.fit(sklearn_X_trian, sklearn_y_train)
+perceptron.fit(perceptron_X_trian, perceptron_y_train)
 
 print(f'Perceptron train score: {perceptron.score(perceptron_X_trian, perceptron_y_train)}')
 print(f'Perceptron test score: {perceptron.score(perceptron_X_test, perceptron_y_test)}')
@@ -194,7 +193,7 @@ def model():
 start_time = time()
 
 CNN = model()
-CNN.fit(X_train, y_train, epochs=10, batch_size=32)
+CNN.fit(X_train, y_train, epochs=5, batch_size=128)
 
 # Clear the output.
 clear_output()
@@ -239,7 +238,7 @@ plt.tick_params(
 
 # %%
 def _get_available_gpus():
-    devices = tf.config.list_logical_devices
+    devices = tf.config.list_logical_devices()
     device_names = [device.name for device in devices]
     return [device for device in device_names if 'device:gpu' in device.lower()]
 
@@ -247,7 +246,7 @@ def get_img_contour_thresh(img):
     x, y, w, h = 0, 0, 300, 300
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (35, 35), 0)
-    ret, thresh1 = cv2.threshold(blur, 70, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    ret, thresh1 = cv2.threshold(blur, 70, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     thresh1 = thresh1[y:y + h, x:x + w]
     contours, hierarchy = cv2.findContours(thresh1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
     return img, contours, thresh1
@@ -289,7 +288,6 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-# tfback._get_available_gpus = _get_available_gpus
 main()
 
 
