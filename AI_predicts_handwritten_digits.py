@@ -157,11 +157,14 @@ reform_sklearn = lambda target : np.array([np.argmax(sample) for sample in targe
 perceptron_X_trian, perceptron_X_test = (X_train.reshape(60000, 784), X_test.reshape(10000, 784))
 perceptron_y_train, perceptron_y_test = (reform_sklearn(y_train), reform_sklearn(y_test))
 
+start_time = time()
+
 perceptron.fit(perceptron_X_trian, perceptron_y_train)
 
 print(f'Perceptron train score: {perceptron.score(perceptron_X_trian, perceptron_y_train)}')
 print(f'Perceptron test score: {perceptron.score(perceptron_X_test, perceptron_y_test)}')
 print(f'Number of iterations used: {perceptron.n_iter_}')
+print(f'Elapsed: {(time() - start_time)/60:.2f} min.')
 
 # %% [markdown]
 # #### Apply model to the data
@@ -198,14 +201,12 @@ CNN.fit(X_train, y_train, epochs=5, batch_size=128)
 # Clear the output.
 clear_output()
 
-end_time = (time() - start_time)/60
-
 # NOTE: batch_size param means that the model will be tested on 64 samples at a time.
 #       This save a ton of RAM.
 
 print(train_score := 'CNN Train Score: {:.2f}'.format(CNN.evaluate(X_train, y_train, verbose=False)[1]*100))
 print(test_score := 'CNN Test Score: {:.2f}'.format(CNN.evaluate(X_test, y_test, verbose=False)[1]*100))
-print(elapsed := f'Elapsed: {end_time:.2f} min.')
+print(elapsed := f'Elapsed: {(time() - start_time)/60:.2f} min.')
 
 # Notify when done.
 notification.notify(
@@ -267,8 +268,8 @@ def main():
                 newImage = cv2.resize(newImage, (28, 28))
                 newImage = np.array(newImage)
                 newImage = newImage.flatten()
-                newImage = newImage.reshape(1, 28, 28, 1)
-                ans1 = CNN.predict(newImage)
+                newImage = scaler.transform(newImage.reshape(1, 784))
+                ans1 = CNN.predict(newImage.reshape(1, 28, 28, 1))
                 ans1=ans1.tolist()
                 ans1 = ans1[0].index(max(ans1[0]))
 
