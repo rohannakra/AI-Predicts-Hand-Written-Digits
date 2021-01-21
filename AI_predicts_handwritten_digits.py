@@ -15,7 +15,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.manifold import TSNE
 from sklearn.datasets import load_digits
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.keras.optimizers import SGD
@@ -90,58 +90,23 @@ percent_of_non_zeros = np.sum(data != 0)/data.size    # -> 20%
 # Check for null values.
 check_null = np.isnan(np.sum(data))    # -> False
 
-# Change the data so that every value is the same (0 or ___).
-all_values = []
-
-for sub_arr in data:
-    for i in sub_arr:
-        if i != 0:
-            all_values.append(i)
-
-average_val = sum(all_values)/len(all_values)    # -> 174.4
-
 # Create scaler.
 scaler = MinMaxScaler()
 
-# # Reform the data according to value.
-# def reform_data(arr, scale=None):
-#     new_arr = []
-#     for sub_arr in arr:
-#         new_arr.append([])
-#         index = new_arr.index([])    # Finds index of new row/sample.
-#         for i in sub_arr:
-#             if i != 0:
-#                 new_arr[index].append(average_val)
-#             else:
-#                 new_arr[index].append(0)
-
-#     return np.array(new_arr) if scale is None else scale(np.array(new_arr))
-
-# Keep one sample to compare.
+# Keep sample for comparison
 sample = X_train[0]
 
 # Reform the data.
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Change data to image data.
-X_train = X_train.reshape((60000, 28, 28, 1)).astype('float32')
-X_test = X_test.reshape((10000, 28, 28, 1)).astype('float32')
-
 # Change to categorical data.
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
 
-# Check how X_train sample is now different.
-fig, (ax1, ax2) = plt.subplots(1, 2)
-
-ax1.imshow(sample.reshape(28, 28), cmap='binary')
-ax1.text(25, 25, np.where(y_train[0] == 1)[0][0], fontsize=20, color='red')
-ax1.set_title('Before reform_data()')
-
-ax2.imshow(X_train[0], cmap='binary')
-ax2.text(25, 25, np.where(y_train[0] == 1)[0][0], fontsize=20, color='red')
-ax2.set_title('After reform_data()')
+# Change data to image data.
+X_train = X_train.reshape((60000, 28, 28, 1)).astype('float32')
+X_test = X_test.reshape((10000, 28, 28, 1)).astype('float32')
 
 # %% [markdown]
 # #### Apply linear model to the data
@@ -189,8 +154,8 @@ def model():
 #       Conv2D() is an input layer for converting an image in to a matrix.
 #       MaxPooling2D() is another input layer.
 #       Flatten() converts multi-dimensional data into a single vector to be processed. Ex: 28 x 28 -> 784
-#       Dense() is an output layer.
-#       SGD() is stochastic gradient descent where it is used to update the weights.
+#       Dense() is the main hidden layer.
+#       SGD() is stochastic gradient descent to update weights.
 
 # Create timer.
 start_time = time()
