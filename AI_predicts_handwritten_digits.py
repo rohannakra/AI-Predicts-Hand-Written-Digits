@@ -155,7 +155,7 @@ def model():
 #       MaxPooling2D() is another input layer.
 #       Flatten() converts multi-dimensional data into a single vector to be processed. Ex: 28 x 28 -> 784
 #       Dense() is the main hidden layer.
-#       SGD() is stochastic gradient descent to update weights.
+#       SGD() is stochastic gradient descent, an optimization function to update weights.
 
 # Create timer.
 start_time = time()
