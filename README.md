@@ -7,7 +7,7 @@ Steps Taken:
 * create deep learning model
     * create convultional neural network
         * train model on dataset
-* view results
-    * plot results using matplotlib
+* test the model
+    * user input to select number to test on
 
 <img src='img.png'>

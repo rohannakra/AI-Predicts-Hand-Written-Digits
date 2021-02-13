@@ -20,6 +20,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.datasets import mnist
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 # Import other modules.
@@ -40,18 +41,11 @@ from IPython.display import clear_output
 
 # NOTE: To import 'plyer' module, you must use 'pip install plyer'
 
-# Getting workspace/project to create a path that leads to the dataset.
-print(os.getcwd())
-
 # Import dataset.
-train = pd.read_csv('train.csv')
-test = pd.read_csv('test.csv')
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
 
-# NOTE: You can download these files @: https://www.kaggle.com/oddrationale/mnist-in-csv?select=mnist_train.csv
-
-# X is the hand written digits, y is the actual digits (answers).
-X_train, y_train = (train.loc[:, '1x1':'28x28'].to_numpy(), train['label'].to_numpy())
-X_test, y_test = (test.loc[:, '1x1':'28x28'].to_numpy(), test['label'].to_numpy())
+X_train = X_train.reshape(X_train.shape[0], -1)
+X_test = X_test.reshape(X_test.shape[0], -1)
 
 # X represents the hand written digits which are 28 x 28 in size.
 print(f'X_train.shape: {X_train.shape}')    # -> (60,000, 784)
@@ -68,9 +62,9 @@ print(f'y_test.shape: {y_test.shape}')    # -> (10,000,)
 # %%
 tsne = TSNE()
 
-X_test_trans = tsne.fit_transform(X_test[:5000])
+X_test_trans = tsne.fit_transform(X_test[:2500])
 
-scatter = plt.scatter(X_test_trans[:, 0], X_test_trans[:, 1], c=y_test[:5000])
+scatter = plt.scatter(X_test_trans[:, 0], X_test_trans[:, 1], c=y_test[:2500])
 plt.legend(*scatter.legend_elements())
 plt.show()
 
@@ -97,6 +91,10 @@ scaler = MinMaxScaler()
 sample = X_train[0]
 
 # Reform the data.
+
+print(X_train.shape)
+print(X_test.shape)
+
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
@@ -128,7 +126,7 @@ perceptron.fit(perceptron_X_trian, perceptron_y_train)
 
 print(f'Perceptron train score: {perceptron.score(perceptron_X_trian, perceptron_y_train)}')
 print(f'Perceptron test score: {perceptron.score(perceptron_X_test, perceptron_y_test)}')
-print(f'Number of iterations used: {perceptron.n_iter_}')
+print(f'Iterations used: {perceptron.n_iter_}')
 print(f'Elapsed: {(time() - start_time)/60:.2f} min.')
 
 # %% [markdown]
@@ -184,14 +182,30 @@ notification.notify(
 # #### Test the model through visualizations
 
 # %%
-# Create a list of predictions.
-sample = np.array(choice(X_test).reshape(1, 28, 28, 1))
+# Ask user for specific number to test model.
+def pick_num():
+    try:
+        number = int(input('Choose a number to test the model on -> '))
+    except ValueError:
+        pick_num()
+    else:
+        return number
+
+og_y_test = np.array([np.argmax(y, axis=None, out=None) for y in y_test])
+
+index = choice(np.where(og_y_test == pick_num())[0])
+sample = X_test[index].reshape(1, 28, 28, 1)
+sample_target = og_y_test[index]
+
+print(index)
+
 prediction = np.argmax(CNN.predict(sample))
 
 sample_img = sample.reshape(28, 28)
 
 plt.imshow(sample_img, cmap='binary')
-plt.text(18, 26, f'Prediction: {prediction}', fontsize=11, color='red')
+plt.text(18, 24, f'Prediction: {prediction}', fontsize=11, color='red')
+plt.text(18, 26, f'Target: {sample_target}', fontsize=11, color='red')
 plt.tick_params(
     axis='both',          # changes apply to the x-axis
     which='both',      # both major and minor ticks are affected
