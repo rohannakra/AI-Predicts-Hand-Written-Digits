@@ -193,6 +193,7 @@ def pick_num():
 
 og_y_test = np.array([np.argmax(y, axis=None, out=None) for y in y_test])
 
+# Get the random index for the sample and the sample target.
 index = choice(np.where(og_y_test == pick_num())[0])
 sample = X_test[index].reshape(1, 28, 28, 1)
 sample_target = og_y_test[index]
