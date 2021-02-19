@@ -113,25 +113,38 @@ perceptron = Perceptron(max_iter=99999999)    # Perceptron only works when data 
 # NOTE: Perceptron is a neural network with only one hidden-layer.
 
 # Create function that reforms the data for the algorithm.
-reform_sklearn = lambda target : np.array([np.argmax(sample) for sample in target])
+def reform_sklearn(*arrays):
+    
+    reformed_arrays = []
 
-perceptron_X_trian, perceptron_X_test = (X_train.reshape(60000, 784), X_test.reshape(10000, 784))
-perceptron_y_train, perceptron_y_test = (reform_sklearn(y_train), reform_sklearn(y_test))
+    for array in arrays:
+
+        # Array is a data variable.
+        if array.ndim != 2:
+            reformed_arrays.append(array.reshape(len(array), -1))
+    
+        # Array is a target variable
+        else:
+            reformed_arrays.append(np.array([np.argmax(sample) for sample in array]))
+        
+    return reformed_arrays
+
+per_X_train, per_y_train, per_X_test, per_y_test = reform_sklearn(X_train, y_train, X_test, y_test)
 
 # NOTE: perceptrons are not good for image processing,
 #       meaning the data must be 1D, not 2D.
 
 start_time = time()
 
-perceptron.fit(perceptron_X_trian, perceptron_y_train)
+perceptron.fit(per_X_train, per_y_train)
 
-print(f'Perceptron train score: {perceptron.score(perceptron_X_trian, perceptron_y_train)}')
-print(f'Perceptron test score: {perceptron.score(perceptron_X_test, perceptron_y_test)}')
+print(f'Perceptron train score: {perceptron.score(per_X_train, per_y_train)}')
+print(f'Perceptron test score: {perceptron.score(per_X_test, per_y_test)}')
 print(f'Iterations used: {perceptron.n_iter_}')
 print(f'Elapsed: {(time() - start_time)/60:.2f} min.')
 
 # NOTE: Based on the results on the perceptron and that the model used little iterations/epochs
-#       to fit the data, we can assume the data is lineearly seperable.
+#       to fit the data, we can assume the data is linearly seperable.
 
 # %% [markdown]
 # #### Apply model to the data
@@ -167,8 +180,8 @@ def model():
 # Create timer.
 start_time = time()
 
-CNN = model()
-CNN.fit(X_train, y_train, epochs=5, batch_size=128)
+model = model()
+results = model.fit(X_train, y_train, epochs=5, batch_size=128).history
 
 # Clear the output.
 clear_output()
@@ -176,8 +189,8 @@ clear_output()
 # NOTE: batch_size param means that the model will be tested on 64 samples at a time.
 #       This save a ton of RAM during the training process.
 
-print(train_score := 'CNN Train Score: {:.2f}'.format(CNN.evaluate(X_train, y_train, verbose=False)[1]*100))
-print(test_score := 'CNN Test Score: {:.2f}'.format(CNN.evaluate(X_test, y_test, verbose=False)[1]*100))
+print(train_score := 'CNN Train Score: {:.2f}'.format(model.evaluate(X_train, y_train, verbose=False)[1]*100))
+print(test_score := 'CNN Test Score: {:.2f}'.format(model.evaluate(X_test, y_test, verbose=False)[1]*100))
 print(elapsed := f'Elapsed: {(time() - start_time)/60:.2f} min.')
 
 # Notify when done.
@@ -186,6 +199,9 @@ notification.notify(
     message=f'{train_score}\n{test_score}\n{elapsed}',
     app_icon='python_icon.ico'
 )
+
+plt.plot(range(5), results['loss'])
+plt.title('Training Loss')
 
 # %% [markdown]
 # #### Test the model through visualizations
@@ -211,7 +227,7 @@ index = choice(np.where(og_y_test == number)[0])
 sample = X_test[index].reshape(1, 28, 28, 1)
 sample_target = og_y_test[index]
 
-prediction = np.argmax(CNN.predict(sample))
+prediction = np.argmax(model.predict(sample))
 
 sample_img = sample.reshape(28, 28)
 
