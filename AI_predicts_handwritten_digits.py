@@ -202,8 +202,13 @@ notification.notify(
     app_icon='python_icon.ico'
 )
 
-plt.plot(range(5), results['loss'])
-plt.title('Training Loss')
+fig, (ax_1, ax_2) = plt.subplots(1, 2, figsize=(10, 5))
+
+ax_1.plot(range(5), results['loss'])
+ax_1.set_title('Training Loss')
+
+ax_2.plot(range(5), results['accuracy'])
+ax_2.set_title('Training Accuracy')
 
 # %% [markdown]
 # #### Test the model through visualizations
