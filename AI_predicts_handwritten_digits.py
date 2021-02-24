@@ -115,7 +115,9 @@ perceptron = Perceptron(max_iter=99999999)    # Perceptron only works when data 
 # Create function that reforms the data for the algorithm.
 def reform_sklearn(*arrays):
     
+    old_arrays = arrays
     reformed_arrays = []
+    print('Reforming arrays...')
 
     for array in arrays:
 
@@ -126,10 +128,13 @@ def reform_sklearn(*arrays):
         # Array is a target variable
         else:
             reformed_arrays.append(np.array([np.argmax(sample) for sample in array]))
-        
+    
+    print('Old array shapes: {}'.format([array.shape for array in old_arrays]))
+    print('New array shapes: {}\n'.format([array.shape for array in reformed_arrays]))
     return reformed_arrays
 
-per_X_train, per_y_train, per_X_test, per_y_test = reform_sklearn(X_train, y_train, X_test, y_test)
+per_X_train, per_X_test = reform_sklearn(X_train, X_test)
+per_y_train, per_y_test = reform_sklearn(y_train, y_test)
 
 # NOTE: perceptrons are not good for image processing,
 #       meaning the data must be 1D, not 2D.
@@ -205,10 +210,10 @@ notification.notify(
 fig, (ax_1, ax_2) = plt.subplots(1, 2, figsize=(10, 5))
 
 ax_1.plot(range(5), results['loss'])
-ax_1.set_title('Training Loss')
+ax_1.set_title('Training Loss');
 
 ax_2.plot(range(5), results['accuracy'])
-ax_2.set_title('Training Accuracy')
+ax_2.set_title('Training Accuracy');
 
 # %% [markdown]
 # #### Test the model through visualizations
@@ -219,7 +224,7 @@ def pick_num(num):
     try:
         number = int(num)
     except ValueError:
-        pick_num(input('Choose a number to test the model on -> '))
+        raise ValueError('Please choose a number')
     else:
         return number
 
