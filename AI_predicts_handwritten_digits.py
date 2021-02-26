@@ -1,35 +1,13 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
-# %%
-from IPython import get_ipython
-
 # %% [markdown]
 # ## Objective - Create a ML system that detects and classifies hand-written digits
 # %% [markdown]
 # #### Import modules and prepare dataset
 
 # %%
-# Import sklearn/tensorflow modules.
-import tensorflow as tf
-from sklearn.linear_model import Perceptron
-from sklearn.manifold import TSNE
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.datasets import mnist
-get_ipython().run_line_magic('matplotlib', 'inline')
-
-# Import other modules.
-import matplotlib.pyplot as plt
-import numpy as np
-from time import time
-from plyer import notification
-from random import choice
-from IPython.display import clear_output
-
-# NOTE: To import 'plyer' module, you must use 'pip install plyer'
+# Import package.
+from package.package import *
 
 # Import dataset.
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
@@ -161,6 +139,8 @@ print(f'Elapsed: {(time() - start_time)/60:.2f} min.')
 #       This algorithm goes thorugh different steps of processing the images in different ways,
 #       eventually finding a pattern in the data.
 
+# Begin cited code:
+# https://rb.gy/yykaxm
 def model():
     
     model = Sequential()
@@ -174,6 +154,8 @@ def model():
     opt = SGD(lr=0.01, momentum=0.9)
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
+
+# End cited code.
 
 # NOTE: Sequential() models allow you to make models layer-by-layer and is much simpler compared to Input() models.
 #       Conv2D() is an input layer for converting an image in to a matrix.
